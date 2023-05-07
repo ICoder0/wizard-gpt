@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0,0,256,256" width="13px"
+     height="13px" fill-rule="nonzero">
+    <g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter"
+       stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none"
+       font-size="none" text-anchor="none" style="mix-blend-mode: normal">
+        <g transform="scale(4,4)">
+            <path d="M47.626,5.808v0c-0.923,-0.284 -1.709,0.72 -1.212,1.548l1.586,2.644l-3,2l0.62,0.451c5.394,3.923 3.898,11.782 -0.952,16.361v0c0,0 -5.824,-1.812 -12.668,-1.812c-6.844,0 -9.729,0.975 -12.67,1.814l0.001,-0.002l-1.531,-1.531c-4.588,-4.588 -4.048,-11.465 1.2,-15.281v0l-3,-2l1.587,-2.644c0.497,-0.828 -0.29,-1.832 -1.212,-1.548v0c-6.167,1.897 -10.375,7.595 -10.375,14.046v0.711c0,5.19 3.6,11.685 8,14.435v0v13c0,7.18 5.82,13 13,13h10c7.18,0 13,-5.82 13,-13v-13v0c4.4,-2.75 8,-9.245 8,-14.434v-0.711c0,-6.452 -4.208,-12.15 -10.374,-14.047z"
+                  fill="#ffffff"></path>
+            <ellipse cx="23" cy="47" rx="5" ry="4" fill="#000000"></ellipse>
+            <ellipse cx="41" cy="47" rx="5" ry="4" fill="#000000"></ellipse>
+        </g>
+    </g>
+</svg>

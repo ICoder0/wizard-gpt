@@ -1,0 +1,25 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin require-restart="true">
+    <id>com.github.bofa1ex.wizardgpt</id>
+    <name>Wizard GPT</name>
+    <vendor>Icoder</vendor>
+    <depends>com.intellij.modules.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.github.icoder.wizardgpt.settings.AppSettingsState"/>
+        <applicationConfigurable instance="com.github.icoder.wizardgpt.settings.AppSettingsConfigurable"
+                                 id="com.github.bofa1ex.wizardgpt.settings.AppSettingsConfigurable"
+                                 displayName="Wizard GPT"/>
+
+        <notificationGroup id="WizardGPT" displayType="BALLOON"/>
+        <statusBarWidgetFactory implementation="com.github.icoder.wizardgpt.statusBar.WizardGptWidgetFactory"
+                                order="first"/>
+        <!--suppress PluginXmlExtensionRegistration -->
+        <intentionAction>
+            <className>com.github.icoder.wizardgpt.actions.GptCodeReadableIntentionAction</className>
+            <bundleName>messages.WizardGptBundle</bundleName>
+            <categoryKey>intention.category.gpt</categoryKey>
+        </intentionAction>
+    </extensions>
+
+</idea-plugin>
