@@ -63,13 +63,14 @@ abstract class GptCodeBrushIntentionAction : Iconable, LowPriorityAction, PsiEle
                 ?.let { it as TextEditor }
                 ?.editor ?: return
         }.let {
-            it.selectionModel.selectedText to TextRange.create(
+            val range = TextRange.create(
                 it.document.getLineStartOffset(it.document.getLineNumber(it.selectionModel.selectionStart)),
                 it.selectionModel.selectionEnd
             )
+            it.document.getText(range) to range
         }
 
-        if (code.isNullOrBlank()) return
+        if (code.isBlank()) return
         if (code.length > AppSettingsState.instance.maxTokens) {
             if (isPreviewEditor) throw PreviewException(IntentionPreviewInfo.Html(WizardGptBundle.message("exceed.maxTokens")))
             WizardGptNotifier.notifyWarn(project, WizardGptBundle.message("exceed.maxTokens")); return

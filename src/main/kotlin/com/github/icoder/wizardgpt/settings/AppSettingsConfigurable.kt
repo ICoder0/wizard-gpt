@@ -40,7 +40,7 @@ class AppSettingsConfigurable : BoundConfigurable(WizardGptBundle.message("name"
 
     override fun apply() {
         super.apply()
-        checkApiKeyValid()
+        checkApiKeyValid(hiddenProcess = true)
         WizardGptTopics.publish()
         if (cacheOptionsModified) {
             Openai.cache = Openai.buildCache()
@@ -53,11 +53,11 @@ class AppSettingsConfigurable : BoundConfigurable(WizardGptBundle.message("name"
     }
 
     @Suppress("DialogTitleCapitalization")
-    private fun checkApiKeyValid(@Suppress("UNUSED_PARAMETER") e: ActionEvent? = null) {
+    private fun checkApiKeyValid(@Suppress("UNUSED_PARAMETER") e: ActionEvent? = null, hiddenProcess: Boolean = false) {
         val apiKey = apiKeyTextField.text
         if (apiKey.isBlank()) {
             AppSettingsState.instance.apiEnabled = false
-            Messages.showWarningDialog("Api key must not be blank.", "API Settings")
+            if (hiddenProcess.not()) Messages.showWarningDialog("Api key must not be blank.", "API Settings")
             return
         }
 
@@ -75,10 +75,10 @@ class AppSettingsConfigurable : BoundConfigurable(WizardGptBundle.message("name"
         val exception = exceptionReference.get()
         if (exception == null) {
             AppSettingsState.instance.apiEnabled = true
-            Messages.showInfoMessage("Connection successful", "API settings")
+            if (hiddenProcess.not()) Messages.showInfoMessage("Connection successful", "API settings")
         } else {
             AppSettingsState.instance.apiEnabled = false
-            Messages.showErrorDialog("Error: ${exception.message}", "API settings")
+            if (hiddenProcess.not()) Messages.showErrorDialog("Error: ${exception.message}", "API settings")
         }
     }
 

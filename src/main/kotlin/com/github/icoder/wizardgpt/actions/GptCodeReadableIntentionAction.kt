@@ -18,7 +18,7 @@ class GptCodeReadableIntentionAction : GptCodeBrushIntentionAction() {
         append("\n")
         append("### Origin")
         append("\n")
-        append("\t$code")
+        append(code)
         append("\n")
         append("### Modified")
     }
