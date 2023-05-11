@@ -20,6 +20,12 @@
             <bundleName>messages.WizardGptBundle</bundleName>
             <categoryKey>intention.category.gpt</categoryKey>
         </intentionAction>
+        <!--suppress PluginXmlExtensionRegistration -->
+        <intentionAction>
+            <className>com.github.icoder.wizardgpt.actions.GptCodeRobustIntentionAction</className>
+            <bundleName>messages.WizardGptBundle</bundleName>
+            <categoryKey>intention.category.gpt</categoryKey>
+        </intentionAction>
     </extensions>
 
 </idea-plugin>

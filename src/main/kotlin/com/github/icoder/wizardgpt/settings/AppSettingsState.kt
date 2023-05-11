@@ -36,6 +36,12 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState?> {
         append("- Keep comments up-to-date and accurate, especially modified the code.")
     }
 
+    var brushRobustEmbeddedPrompt: String = buildString {
+        append("- Make the code robust and accurate after modified.")
+        append("\n")
+        append("- Improve error handling and input validation.")
+    }
+
     override fun loadState(state: AppSettingsState) {
         XmlSerializerUtil.copyBean(state, this)
     }
