@@ -1,0 +1,6 @@
+String userName = getUserName();
+List<String> projectList = getProjects(userName);
+List<String> userGuidList = projectList.stream().map(project -> userName + "." + project).collect(Collectors.toList());
+for (String userGuid : userGuidList) {
+    System.out.println(userGuid);
+}

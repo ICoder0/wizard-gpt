@@ -1,0 +1,16 @@
+String userName = getUserName();
+if (userName == null || userName.isEmpty()) {
+    System.out.println("User name is empty or null");
+    return;
+}
+List<String> projectList = getProjects(userName);
+if (projectList == null || projectList.isEmpty()) {
+    System.out.println("Project list is empty or null");
+    return;
+}
+List<String> userGuidList = projectList.stream().map(project -> {
+    return userName + "." + project;
+}).filter(Objects::nonNull).collect(Collectors.toList());
+for (String userGuid : userGuidList) {
+    System.out.println(userGuid);
+}

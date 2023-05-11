@@ -1,21 +1,41 @@
 <html>
 <body>
-Write your description here.
-Start the description with a verb in 3rd person singular, like reports, detects, highlights.
-In the first sentence, briefly explain what exactly the inspection helps you detect.
-Make sure the sentence is not very long and complicated.
+Act as <code>${language}</code> Programmer
 <p>
-    The first sentence must be in a dedicated paragraph separated from the rest of the text. This will make the
-    description easier to read.
-    Make sure the description doesn’t just repeat the inspection title.
+    - Make the code robust and accurate after modified.
 </p>
 <p>
-    See https://jetbrains.design/intellij/text/inspections/#descriptions for more information.
+    - Improve error handling and input validation.
 </p>
-<!-- tooltip end -->
-<p>Text after this comment will only be shown in the settings of the inspection.</p>
+<pre>
+<code>
+    ### Origin
+    String userName = getUserName();
+    List<String> projectList = getProjects(userName);
+    List<String> userGuidList = projectList.stream().map(project -> userName + "." + project).collect(Collectors.toList());
+    for (String userGuid : userGuidList) {
+        System.out.println(userGuid);
+    }
+    ### Modified
+    String userName = getUserName();
+    if (userName == null || userName.isEmpty()) {
+        System.out.println("User name is empty or null");
+        return;
+    }
+    List<String> projectList = getProjects(userName);
+    if (projectList == null || projectList.isEmpty()) {
+        System.out.println("Project list is empty or null");
+        return;
+    }
+    List<String> userGuidList = projectList.stream().map(project -> {
+        return userName + "." + project;
+    }).filter(Objects::nonNull).collect(Collectors.toList());
+    for (String userGuid : userGuidList) {
+        System.out.println(userGuid);
+    }
+</code>
+</pre>
 
-<p>To open related settings directly from the description, add a link with `settings://$` optionally followed by `?$` to
-    pre-select a UI element.</p>
+Powered by: <b>Wizard-GPT plugin</b>
 </body>
 </html>
