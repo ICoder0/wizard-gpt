@@ -78,7 +78,7 @@ abstract class GptCodeBrushIntentionAction : Iconable, LowPriorityAction, PsiEle
         brush(project, editorFix, element, code, range)
     }
 
-    protected open fun brush(project: Project, editor: Editor, element: PsiElement, code: String, range: TextRange, prompt: String = wrapPrompt(code, element.language)) {
+    open fun brush(project: Project, editor: Editor, element: PsiElement, code: String, range: TextRange, prompt: String = wrapPrompt(code, element.language)) {
         kotlin.runCatching {
             invokeGpt(prompt)
         }.onFailure {

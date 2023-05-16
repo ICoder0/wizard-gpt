@@ -42,6 +42,10 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState?> {
         append("- Improve error handling and input validation.")
     }
 
+    var brushCustomEmbeddedPrompt: String = buildString {
+        append("- Make the code  accurate after modified.")
+    }
+
     override fun loadState(state: AppSettingsState) {
         XmlSerializerUtil.copyBean(state, this)
     }
