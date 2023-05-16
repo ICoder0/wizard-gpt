@@ -1,11 +1,7 @@
 package com.github.icoder.wizardgpt.actions
 
 import com.github.icoder.wizardgpt.settings.AppSettingsState
-import com.github.icoder.wizardgpt.util.Openai
-import com.github.icoder.wizardgpt.util.OpenaiService
-import com.github.icoder.wizardgpt.util.completion
 import com.intellij.lang.Language
-import com.intellij.openapi.project.Project
 
 class GptCodeReadableIntentionAction : GptCodeBrushIntentionAction() {
     override fun getText() = "Brush READABLE"
@@ -22,11 +18,4 @@ class GptCodeReadableIntentionAction : GptCodeBrushIntentionAction() {
         append("\n")
         append("### Modified")
     }
-
-    override fun invokeGpt(project: Project, prompt: String): String? =
-        Openai.instance.completion(OpenaiService.CompletionRequest(prompt, stop = "###"))
-            ?.choices
-            ?.firstOrNull()
-            ?.text
-            ?.trim('\n')
 }

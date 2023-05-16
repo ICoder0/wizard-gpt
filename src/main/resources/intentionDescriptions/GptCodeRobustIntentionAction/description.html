@@ -1,40 +1,14 @@
 <html>
 <body>
-Act as <code>${language}</code> Programmer
+<pre>
+    Act as <code>${language}</code> Programmer
+</pre>
 <p>
     - Make the code robust and accurate after modified.
 </p>
 <p>
     - Improve error handling and input validation.
 </p>
-<pre>
-<code>
-    ### Origin
-    String userName = getUserName();
-    List<String> projectList = getProjects(userName);
-    List<String> userGuidList = projectList.stream().map(project -> userName + "." + project).collect(Collectors.toList());
-    for (String userGuid : userGuidList) {
-        System.out.println(userGuid);
-    }
-    ### Modified
-    String userName = getUserName();
-    if (userName == null || userName.isEmpty()) {
-        System.out.println("User name is empty or null");
-        return;
-    }
-    List<String> projectList = getProjects(userName);
-    if (projectList == null || projectList.isEmpty()) {
-        System.out.println("Project list is empty or null");
-        return;
-    }
-    List<String> userGuidList = projectList.stream().map(project -> {
-        return userName + "." + project;
-    }).filter(Objects::nonNull).collect(Collectors.toList());
-    for (String userGuid : userGuidList) {
-        System.out.println(userGuid);
-    }
-</code>
-</pre>
 
 Powered by: <b>Wizard-GPT plugin</b>
 </body>

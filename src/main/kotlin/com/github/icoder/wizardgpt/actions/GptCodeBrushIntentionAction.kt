@@ -3,7 +3,10 @@ package com.github.icoder.wizardgpt.actions
 import com.github.icoder.wizardgpt.WizardGptBundle
 import com.github.icoder.wizardgpt.actions.lang.ElementTypeMatcher
 import com.github.icoder.wizardgpt.settings.AppSettingsState
-import com.github.icoder.wizardgpt.util.WizardGptNotifier
+import com.github.icoder.wizardgpt.util.Openai
+import com.github.icoder.wizardgpt.util.OpenaiService
+import com.github.icoder.wizardgpt.util.completion
+import com.intellij.codeInsight.hint.HintManager
 import com.intellij.codeInsight.intention.LowPriorityAction
 import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo
@@ -25,14 +28,9 @@ import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import com.intellij.util.applyIf
 import javax.swing.Icon
 
 abstract class GptCodeBrushIntentionAction : Iconable, LowPriorityAction, PsiElementBaseIntentionAction() {
-    abstract fun wrapPrompt(code: String, language: Language): String
-    abstract fun invokeGpt(project: Project, prompt: String): String?
-    private fun isPreviewEditor(editor: Editor) = editor is ImaginaryEditor
-
     final override fun isAvailable(project: Project, editor: Editor, element: PsiElement): Boolean {
         if (ApplicationManager.getApplication().assertReadAccessAllowed().runCatching { -> }.isFailure) return false
         if (canModify(element).not()) return false
@@ -49,44 +47,48 @@ abstract class GptCodeBrushIntentionAction : Iconable, LowPriorityAction, PsiEle
         return isStatementOrCodeBlock(element.containingFile, selectedRange)
     }
 
-    override fun generatePreview(project: Project, editor: Editor, file: PsiFile): IntentionPreviewInfo = try { super.generatePreview(project, editor, file) } catch (e: PreviewException) { e.previewInfo }
-
     /**
      * when invokeForPreview, editor is copy as ImaginaryEditor,
      * and it selectionModel#selectText will be return null. It makes the preview out of available.
      */
-    final override fun invoke(project: Project, editor: Editor, element: PsiElement) {
-        val isPreviewEditor = isPreviewEditor(editor)
-        val (code, range) = editor.applyIf(isPreviewEditor) {
-            FileEditorManager.getInstance(project)
+    override fun invoke(project: Project, editor: Editor, element: PsiElement) {
+        var editorFix = editor
+        if (isPreviewEditor(editor)) {
+            editorFix = FileEditorManager.getInstance(project)
                 ?.selectedEditor
                 ?.let { it as TextEditor }
-                ?.editor ?: return
-        }.let {
-            val range = TextRange.create(
-                it.document.getLineStartOffset(it.document.getLineNumber(it.selectionModel.selectionStart)),
-                it.selectionModel.selectionEnd
-            )
-            it.document.getText(range) to range
+                ?.editor
+                ?: return
         }
 
+        val range = TextRange.create(
+            editorFix.document.getLineStartOffset(editorFix.document.getLineNumber(editorFix.selectionModel.selectionStart)),
+            editorFix.selectionModel.selectionEnd
+        )
+
+        val code = editorFix.document.getText(range)
         if (code.isBlank()) return
+
         if (code.length > AppSettingsState.instance.maxTokens) {
-            if (isPreviewEditor) throw PreviewException(IntentionPreviewInfo.Html(WizardGptBundle.message("exceed.maxTokens")))
-            WizardGptNotifier.notifyWarn(project, WizardGptBundle.message("exceed.maxTokens")); return
+            if (isPreviewEditor(editorFix)) throw PreviewException(IntentionPreviewInfo.Html(WizardGptBundle.message("exceed.maxTokens")))
+            HintManager.getInstance().showErrorHint(editorFix, WizardGptBundle.message("exceed.maxTokens"))
+            return
         }
 
-        val prompt = wrapPrompt(code, element.language)
+        brush(project, editorFix, element, code, range)
+    }
+
+    protected open fun brush(project: Project, editor: Editor, element: PsiElement, code: String, range: TextRange, prompt: String = wrapPrompt(code, element.language)) {
         kotlin.runCatching {
-            invokeGpt(project, prompt)
+            invokeGpt(prompt)
         }.onFailure {
-            if (isPreviewEditor) throw PreviewException()
-            WizardGptNotifier.notifyError(project, it.localizedMessage)
+            if (isPreviewEditor(editor)) throw PreviewException()
+            HintManager.getInstance().showErrorHint(editor, it.localizedMessage)
         }.onSuccess { modifiedCode: String? ->
             if (modifiedCode.isNullOrBlank()) throw PreviewException()
             editor.document.replaceString(range.startOffset, range.endOffset, modifiedCode)
             // When generate preview, skipped the below:
-            if (isPreviewEditor) return
+            if (isPreviewEditor(editor)) return
 
             // erase current caret without selection
             editor.caretModel.currentCaret.removeSelection()
@@ -96,8 +98,18 @@ abstract class GptCodeBrushIntentionAction : Iconable, LowPriorityAction, PsiEle
                 listOf(range.grown(modifiedCode.length))
             )
         }
-
     }
+
+    protected open fun wrapPrompt(code: String, language: Language): String = throw PreviewException()
+
+    private fun invokeGpt(prompt: String): String? =
+        Openai.instance.completion(OpenaiService.CompletionRequest(prompt, stop = "###"))
+            ?.choices
+            ?.firstOrNull()
+            ?.text
+            ?.trim('\n')
+
+    private fun isPreviewEditor(editor: Editor) = editor is ImaginaryEditor
 
     private fun isStatementOrCodeBlock(file: PsiFile, range: TextRange): Boolean {
         var startOffset = range.startOffset
@@ -133,9 +145,8 @@ abstract class GptCodeBrushIntentionAction : Iconable, LowPriorityAction, PsiEle
         }
     }
 
-    final override fun getIcon(flags: Int): Icon {
-        return AllIcons.Actions.SuggestedRefactoringBulb
-    }
+    final override fun generatePreview(project: Project, editor: Editor, file: PsiFile): IntentionPreviewInfo = try { super.generatePreview(project, editor, file) } catch (e: PreviewException) { e.previewInfo }
+    final override fun getIcon(flags: Int): Icon = AllIcons.Actions.SuggestedRefactoringBulb
 }
 
 class PreviewException(val previewInfo: IntentionPreviewInfo = IntentionPreviewInfo.EMPTY) : RuntimeException()
