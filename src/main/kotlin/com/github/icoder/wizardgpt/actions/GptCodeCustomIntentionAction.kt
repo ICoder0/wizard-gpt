@@ -4,7 +4,6 @@ import com.github.icoder.wizardgpt.settings.AppSettingsState
 import com.intellij.lang.Language
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonShortcuts
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.ex.util.EditorUtil
@@ -20,7 +19,10 @@ import com.intellij.psi.PsiElement
 import com.intellij.ui.EditorTextField
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollBar
-import com.intellij.util.ui.*
+import com.intellij.util.ui.JBFont
+import com.intellij.util.ui.JBInsets
+import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
 import java.awt.Font
 import javax.swing.ScrollPaneConstants
 
@@ -43,14 +45,8 @@ class GptCodeCustomIntentionAction : GptCodeBrushIntentionAction() {
         append("### Modified")
     }
 
-    override fun brush(
-        project: Project,
-        editor: Editor,
-        element: PsiElement,
-        code: String,
-        range: TextRange,
-        prompt: String,
-    ) {
+    override fun brush(project: Project, editor: Editor, element: PsiElement, code: String, range: TextRange, prompt: String) {
+        if (isPreviewEditor(editor)) return
         val editorTextField = EditorTextField("", project, PlainTextFileType.INSTANCE)
         editorTextField.border = JBUI.Borders.empty()
         editorTextField.isFocusable = true
@@ -93,10 +89,8 @@ class GptCodeCustomIntentionAction : GptCodeBrushIntentionAction() {
         DumbAwareAction.create { _: AnActionEvent? -> balloon.hide() }
             .registerCustomShortcutSet(CommonShortcuts.ESCAPE, editorTextField)
         DumbAwareAction.create { _: AnActionEvent? ->
-            WriteCommandAction.runWriteCommandAction(project) {
-                super.brush(project, editor, element, code, range, wrapPrompt(code, element.language, editorTextField.text))
-            }
             balloon.hide()
+            super.brush(project, editor, element, code, range, wrapPrompt(code, element.language, editorTextField.text))
         }.registerCustomShortcutSet(CommonShortcuts.ENTER, editorTextField)
 
         @Suppress("IncorrectParentDisposable")

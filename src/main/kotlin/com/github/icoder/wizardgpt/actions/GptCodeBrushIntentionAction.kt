@@ -7,6 +7,7 @@ import com.github.icoder.wizardgpt.util.Openai
 import com.github.icoder.wizardgpt.util.OpenaiService
 import com.github.icoder.wizardgpt.util.completion
 import com.intellij.codeInsight.hint.HintManager
+import com.intellij.codeInsight.intention.FileModifier
 import com.intellij.codeInsight.intention.LowPriorityAction
 import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo
@@ -14,13 +15,16 @@ import com.intellij.icons.AllIcons
 import com.intellij.lang.Language
 import com.intellij.lang.LanguageNamesValidation
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.impl.ImaginaryEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Iconable
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.util.ThrowableComputable
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
@@ -75,41 +79,61 @@ abstract class GptCodeBrushIntentionAction : Iconable, LowPriorityAction, PsiEle
             return
         }
 
-        brush(project, editorFix, element, code, range)
+        brush(project, editor, element, code, range)
     }
 
-    open fun brush(project: Project, editor: Editor, element: PsiElement, code: String, range: TextRange, prompt: String = wrapPrompt(code, element.language)) {
-        kotlin.runCatching {
-            invokeGpt(prompt)
-        }.onFailure {
-            if (isPreviewEditor(editor)) throw PreviewException()
-            HintManager.getInstance().showErrorHint(editor, it.localizedMessage)
-        }.onSuccess { modifiedCode: String? ->
-            if (modifiedCode.isNullOrBlank()) throw PreviewException()
-            editor.document.replaceString(range.startOffset, range.endOffset, modifiedCode)
-            // When generate preview, skipped the below:
-            if (isPreviewEditor(editor)) return
+    protected open fun brush(project: Project, editor: Editor, element: PsiElement, code: String, range: TextRange, prompt: String = wrapPrompt(code, element.language)) {
+        kotlin.runCatching { invokeGpt(project, editor, prompt) }
+            .onFailure {
+                if (isPreviewEditor(editor)) throw PreviewException()
+                HintManager.getInstance().showErrorHint(editor, it.localizedMessage)
+            }
+            .onSuccess { brushedCode: String? ->
+                if (brushedCode.isNullOrBlank()) throw PreviewException()
+                // When generate preview, skipped alloc writable & reformat.
+                if (isPreviewEditor(editor)) {
+                    editor.document.replaceString(range.startOffset, range.endOffset, brushedCode)
+                    return
+                } else WriteCommandAction.runWriteCommandAction(project) {
+                    editor.document.replaceString(range.startOffset, range.endOffset, brushedCode)
+                }
 
-            // erase current caret without selection
-            editor.caretModel.currentCaret.removeSelection()
-            // reformat the start ~ end(refactored) statement/code-block
-            CodeStyleManager.getInstance(project).reformatText(
-                element.containingFile,
-                listOf(range.grown(modifiedCode.length))
-            )
-        }
+                // erase current caret without selection
+                editor.caretModel.currentCaret.removeSelection()
+                WriteCommandAction.runWriteCommandAction(project) {
+                    // reformat the start ~ end(refactored) statement/code-block
+                    CodeStyleManager.getInstance(project).reformatText(
+                        element.containingFile,
+                        listOf(range.grown(brushedCode.length))
+                    )
+                }
+            }
     }
 
     protected open fun wrapPrompt(code: String, language: Language): String = throw PreviewException()
 
-    private fun invokeGpt(prompt: String): String? =
-        Openai.instance.completion(OpenaiService.CompletionRequest(prompt, stop = "###"))
-            ?.choices
-            ?.firstOrNull()
-            ?.text
-            ?.trim('\n')
+    protected open fun invokeGpt(project: Project, editor: Editor, prompt: String): String? {
+        val completionComputable = ThrowableComputable<String, Exception> {
+            Openai.instance.completion(OpenaiService.CompletionRequest(prompt, stop = "###"))
+                ?.choices
+                ?.firstOrNull()
+                ?.text
+                ?.trim('\n')
+        }
 
-    private fun isPreviewEditor(editor: Editor) = editor is ImaginaryEditor
+        return when {
+            isPreviewEditor(editor) -> completionComputable.compute()
+            else -> ProgressManager.getInstance()
+                .runProcessWithProgressSynchronously(
+                    completionComputable,
+                    WizardGptBundle.message("progress.title"),
+                    true,
+                    project
+                )
+        }
+    }
+
+    protected fun isPreviewEditor(editor: Editor) = editor is ImaginaryEditor
 
     private fun isStatementOrCodeBlock(file: PsiFile, range: TextRange): Boolean {
         var startOffset = range.startOffset
@@ -145,7 +169,16 @@ abstract class GptCodeBrushIntentionAction : Iconable, LowPriorityAction, PsiEle
         }
     }
 
-    final override fun generatePreview(project: Project, editor: Editor, file: PsiFile): IntentionPreviewInfo = try { super.generatePreview(project, editor, file) } catch (e: PreviewException) { e.previewInfo }
+    override fun getElementToMakeWritable(currentFile: PsiFile): PsiElement? =  currentFile
+    override fun getFileModifierForPreview(target: PsiFile): FileModifier? = this
+    override fun startInWriteAction() = false
+
+    final override fun generatePreview(project: Project, editor: Editor, file: PsiFile): IntentionPreviewInfo = try {
+        super.generatePreview(project, editor, file)
+    } catch (e: PreviewException) {
+        e.previewInfo
+    }
+
     final override fun getIcon(flags: Int): Icon = AllIcons.Actions.SuggestedRefactoringBulb
 }
 
