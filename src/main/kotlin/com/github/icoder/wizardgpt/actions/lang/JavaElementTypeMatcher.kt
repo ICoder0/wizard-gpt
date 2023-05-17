@@ -17,7 +17,6 @@ import com.intellij.refactoring.suggested.startOffset
  * method-signature
  *
  */
-@Suppress("UnstableApiUsage")
 class JavaElementTypeMatcher : ElementTypeMatcher {
     private fun isErrorElement(element: PsiElement) = element is PsiErrorElement
     private fun isCommentElement(element: PsiElement) = element is PsiComment
