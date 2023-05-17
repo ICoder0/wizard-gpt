@@ -27,7 +27,7 @@ class JavaElementTypeMatcher : ElementTypeMatcher {
 
     override fun isStatement(ele: PsiElement): Boolean = isErrorElement(ele).not()
             && (isCommentElement(ele)
-            || when (ele.elementType.takeIf { it is ICompositeElementType }?.debugName ?: false)
+            || when (ele.elementType.takeIf { it is ICompositeElementType }?.toString() ?: false)
             {
                 "LOCAL_VARIABLE", "EXPRESSION_STATEMENT", "DECLARATION_STATEMENT", "BLOCK_STATEMENT" -> true
                 "IF_STATEMENT", "SWITCH_STATEMENT", "SWITCH_LABEL_STATEMENT" -> true
