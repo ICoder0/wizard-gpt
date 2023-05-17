@@ -12,3 +12,10 @@
 ### Added
 - Smart&Quick configure(Model,MaxTokens,Temperature,etc).
 - `IntentionAction` Brush Readable
+
+## [0.0.2] - 2023-05-17
+### Added
+- `IntentionAction` Brush Readable
+- `IntentionAction` Brush Robust
+- `IntentionAction` Brush Custom
+- optimize the intention loading openai completion with long-time ui freeze.
