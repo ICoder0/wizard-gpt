@@ -23,7 +23,7 @@ class JavaElementTypeMatcher : ElementTypeMatcher {
     private fun isCommentElement(element: PsiElement) = element is PsiComment
 
     override fun isCodeBlock(ele: PsiElement): Boolean = isErrorElement(ele).not()
-            && ele.elementType?.debugName == "CODE_BLOCK"
+            && ele.elementType?.toString() == "CODE_BLOCK"
 
     override fun isStatement(ele: PsiElement): Boolean = isErrorElement(ele).not()
             && (isCommentElement(ele)
