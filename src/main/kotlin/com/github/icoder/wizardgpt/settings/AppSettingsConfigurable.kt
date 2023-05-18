@@ -23,7 +23,6 @@ import com.intellij.ui.layout.selected
 import java.awt.event.ActionEvent
 import java.util.concurrent.atomic.AtomicReference
 
-@Suppress("UnstableApiUsage")
 class AppSettingsConfigurable : BoundConfigurable(WizardGptBundle.message("name")), Configurable.NoScroll {
     private var cacheOptionsModified: Boolean = false
     private var clientOptionsModified: Boolean = false
