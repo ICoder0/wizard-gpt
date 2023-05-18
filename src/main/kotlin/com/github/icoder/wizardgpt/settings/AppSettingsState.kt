@@ -46,6 +46,9 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState?> {
         append("- Make the code  accurate after modified.")
     }
 
+    var validateElementEnabled: Boolean = true
+    var validateLanguageRange: Set<String> = hashSetOf("properties","xml","yaml","json")
+
     override fun loadState(state: AppSettingsState) {
         XmlSerializerUtil.copyBean(state, this)
     }

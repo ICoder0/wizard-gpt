@@ -36,6 +36,7 @@ class GptCodeCustomIntentionAction : GptCodeBrushIntentionAction() {
         append("\n")
         append(AppSettingsState.instance.brushCustomEmbeddedPrompt)
         append("\n")
+        append(" - ")
         append(prompt)
         append("\n")
         append("### Origin")

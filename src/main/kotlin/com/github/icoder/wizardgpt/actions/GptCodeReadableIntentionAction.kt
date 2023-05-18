@@ -10,6 +10,7 @@ class GptCodeReadableIntentionAction : GptCodeBrushIntentionAction() {
     override fun wrapPrompt(code: String, language: Language): String = buildString {
         append("Act as ${language.id} Programmer")
         append("\n")
+
         append(AppSettingsState.instance.brushReadableEmbeddedPrompt)
         append("\n")
         append("### Origin")

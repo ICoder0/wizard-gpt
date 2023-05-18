@@ -32,13 +32,14 @@ import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import java.net.SocketTimeoutException
 import javax.swing.Icon
 
 abstract class GptCodeBrushIntentionAction : Iconable, LowPriorityAction, PsiElementBaseIntentionAction() {
     final override fun isAvailable(project: Project, editor: Editor, element: PsiElement): Boolean {
         if (ApplicationManager.getApplication().assertReadAccessAllowed().runCatching { -> }.isFailure) return false
         if (canModify(element).not()) return false
-
+        if (AppSettingsState.instance.validateLanguageRange.contains(element.language.id.lowercase())) return true
         val (selectedText, selectedRange) = editor.selectionModel.let {
             it.selectedText to TextRange.create(it.selectionStart, it.selectionEnd)
         }
@@ -86,7 +87,10 @@ abstract class GptCodeBrushIntentionAction : Iconable, LowPriorityAction, PsiEle
         kotlin.runCatching { invokeGpt(project, editor, prompt) }
             .onFailure {
                 if (isPreviewEditor(editor)) throw PreviewException()
-                HintManager.getInstance().showErrorHint(editor, it.localizedMessage)
+                var errorHint = it.localizedMessage
+                if (it is SocketTimeoutException) errorHint = WizardGptBundle.message("completion.timeout")
+
+                HintManager.getInstance().showErrorHint(editor, errorHint)
             }
             .onSuccess { brushedCode: String? ->
                 if (brushedCode.isNullOrBlank()) throw PreviewException()
