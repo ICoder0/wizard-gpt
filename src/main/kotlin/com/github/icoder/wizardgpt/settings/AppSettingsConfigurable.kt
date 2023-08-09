@@ -117,15 +117,15 @@ class AppSettingsConfigurable : BoundConfigurable(WizardGptBundle.message("name"
                     .onApply { cacheOptionsModified = true }
             }
             row {
-                intTextField(1..512, 1).label("Minimum")
+                intTextField(1..512, keyboardStep = 1).label("Minimum")
                     .comment("range = 1..512, step = 1")
                     .bindIntText(AppSettingsState.instance::cacheInitialCapacity)
                     .onApply { cacheOptionsModified = true }
-                intTextField(16..4096, 1).label("Maximum")
+                intTextField(16..4096, keyboardStep = 1).label("Maximum")
                     .comment("range = 16..4096, step = 1")
                     .bindIntText(AppSettingsState.instance::cacheMaximumSize)
                     .onApply { cacheOptionsModified = true }
-                spinner(5..300, 1).label("Expire(sec)")
+                spinner(5..300, step = 1).label("Expire(sec)")
                     .comment("range = 5..300, step = 1")
                     .bindIntValue(AppSettingsState.instance::cacheExpireTimeSec)
                     .onApply { cacheOptionsModified = true }
@@ -133,10 +133,10 @@ class AppSettingsConfigurable : BoundConfigurable(WizardGptBundle.message("name"
         }
         collapsibleGroup("Completion Options") {
             row {
-                intTextField(32..Int.MAX_VALUE, 1).label("Max tokens").comment("32..+inf")
-                    .comment("range = 32..1024, step = 1")
+                intTextField(128..Int.MAX_VALUE, keyboardStep = 1).label("Max tokens")
+                    .comment("128..+inf")
                     .bindIntText(AppSettingsState.instance::maxTokens)
-                spinner(0.1..1.0, step = 0.1).label("Temperature")
+                spinner(0.0..1.0, step = 0.1).label("Temperature")
                     .comment("range = 0.1..1.0, step = 0.1")
                     .bindValue(AppSettingsState.instance::temperature)
             }
