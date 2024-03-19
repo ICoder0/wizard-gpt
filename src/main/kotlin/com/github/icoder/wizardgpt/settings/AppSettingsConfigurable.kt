@@ -4,8 +4,6 @@ import com.github.icoder.wizardgpt.WizardGptBundle
 import com.github.icoder.wizardgpt.util.Openai
 import com.github.icoder.wizardgpt.util.WizardGptTopics
 import com.github.icoder.wizardgpt.util.models
-import com.intellij.application.options.editor.CheckboxDescriptor
-import com.intellij.application.options.editor.checkBox
 import com.intellij.ide.IdeBundle
 import com.intellij.openapi.application.ApplicationBundle
 import com.intellij.openapi.editor.ex.EditorSettingsExternalizable
@@ -17,7 +15,6 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.*
-import com.intellij.ui.layout.PropertyBinding
 import com.intellij.ui.layout.listCellRenderer
 import com.intellij.ui.layout.selected
 import java.awt.event.ActionEvent
@@ -30,12 +27,6 @@ class AppSettingsConfigurable : BoundConfigurable(WizardGptBundle.message("name"
     private var apiKeyTextField = JBTextField()
     private val model: EditorSettingsExternalizable
         get() = EditorSettingsExternalizable.getInstance()
-    private val myShowIntentionPreviewCheckBox
-        get() = CheckboxDescriptor(
-            ApplicationBundle.message("checkbox.show.intention.preview"), PropertyBinding(
-                model::isShowIntentionPreview, model::setShowIntentionPreview
-            )
-        )
 
     override fun apply() {
         super.apply()
@@ -96,7 +87,8 @@ class AppSettingsConfigurable : BoundConfigurable(WizardGptBundle.message("name"
                 browserLink("Overview", "https://platform.openai.com/docs/models/overview")
             }
             row {
-                checkBox(myShowIntentionPreviewCheckBox)
+                checkBox(ApplicationBundle.message("checkbox.show.intention.preview"))
+                    .bindSelected(model::isShowIntentionPreview, model::setShowIntentionPreview)
             }
         }
         collapsibleGroup("Client Options") {
